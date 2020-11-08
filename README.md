@@ -3,6 +3,10 @@ A selection of shell scripts which I find useful.
 
 ## Scripts
 
+### interval.sh
+`interval.sh` outputs the number of seconds between 2 points in time. Arguments 
+must be provided in a format accepted by the `date` command's `-d` option.
+
 ### tally.sh
 `tally.sh` sums the number of times that unique lines are repeated in a file 
 and displays the results in descending order.
