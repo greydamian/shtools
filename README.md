@@ -3,6 +3,10 @@ A selection of shell scripts which I find useful.
 
 ## Scripts
 
+### macscan.sh
+`macscan.sh` outputs the hardware/MAC (Media Access Control) address(es) for a 
+given LAN IP address/subnet.
+
 ### logroll.sh
 `logroll.sh` is a simple/immature log rotation tool. It outputs its standard 
 input to a series of log files. The naming and interval of these log files is 
