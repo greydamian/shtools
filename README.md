@@ -17,6 +17,12 @@ given LAN IP address/subnet.
 ./macscan.sh 192.168.0.0/24
 # scan subnet 192.168.0.0/24, beginning at IP address 192.168.0.1
 ./macscan.sh 192.168.0.1/24
+# scan 2 subnets and 1 single IP address
+./macscan.sh 172.16.0.80/28 172.16.1.16/28 172.16.1.1
+# scan 1 single IP address and 1 subnet
+echo 10.0.0.1 10.0.0.16/28 | ./macscan.sh
+# run interactively
+./macscan.sh
 ```
 
 ### logroll.sh
