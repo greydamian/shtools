@@ -7,48 +7,11 @@
 # the file LICENSE.txt, which is located within this project's root directory.
 #
 
-# N.B. My intuition would have been to use bitwise operators for the conversion 
-# of IP addresses, particularly. However, as an intellectual exercise, I have 
-# intentionally attempted to avoid the use of bitwise operators in favour of 
-# more traditional mathematical operators.
+readonly CMDUSAGE="usage: $0 [<ipaddr>[/<subnet>] ...]";
 
-readonly CMDUSAGE="usage: $0 <ipaddr>[/<subnet>]";
+appendtopath () {
+    [ -n "$1" ] && PATH="$PATH:$1";
 
-CMDARGS_IPADDR="";
-CMDARGS_SUBNET="";
-
-parseargs () {
-    [ $# -lt 1 ] && return 1; # failure
-
-    CMDARGS_IPADDR="$(echo "$1/" | cut -d/ -f1)";
-    CMDARGS_SUBNET="$(echo "$1/" | cut -d/ -f2)";
-
-    CMDARGS_IPADDR="${CMDARGS_IPADDR:-127.0.0.1}";
-    CMDARGS_SUBNET="${CMDARGS_SUBNET:-32}";
-
-    readonly CMDARGS_IPADDR;
-    readonly CMDARGS_SUBNET;
-
-    return 0; # success
-}
-
-iptoint () {
-    local x=${1##*.};
-    local y=${1%.*};
-
-    [ "$x" == "$y" ] && { echo "$x"; return 0; }; # success
-
-    echo "$(( x + 256 * $(iptoint $y) ))";
-    return 0; # success
-}
-
-inttoip () {
-    local x="$1";
-    local n="$(( ${2:-1} - 1 ))";
-
-    (( x < 256 && n < 1 )) && { echo "$x"; return 0; }; # success
-
-    echo "$(inttoip $(( x / 256 )) $n).$(( x % 256 ))";
     return 0; # success
 }
 
@@ -60,26 +23,32 @@ getmacaddr () {
                     egrep "^$1 " | \
                     cut -d' ' -f5 | \
                     sort -u | \
-                    tr '\n' ,)";
+                    tr '\n' ' ')";
 
-    echo "${result%,*}";
+    echo "$result" | sed -E 's/ +$//g';
     return 0; # success
 }
 
 main () {
-    parseargs $@ || { echo "$CMDUSAGE" >&2; return 1; }; # failure
+    appendtopath "$(dirname $0)";
 
-    local x="$(iptoint $CMDARGS_IPADDR)";
-    local n="$(( 2 ** (32 - CMDARGS_SUBNET) ))";
-    (( n -= x % n ));
+    local l="$@";
+    [ -z "$l" ] && read l;
 
-    while (( n > 0 )); do
-        local ipaddr="$(inttoip $x 4)";
-        echo -ne "$ipaddr\r";
-        ping -c1 $ipaddr >/dev/null 2>&1;
-        local macaddr="$(getmacaddr $ipaddr)";
-        [ "$macaddr" != "" ] && printf '%-15s @ %s\n' "$ipaddr" "$macaddr";
-        (( x++ && n-- ));
+    while [ -n "$l" ]; do
+        for ipaddr in $(ip4subnet.sh $l); do
+            echo -ne "$ipaddr\r";
+            ping -c1 $ipaddr >/dev/null 2>&1;
+            local macaddr="$(getmacaddr $ipaddr)";
+            if [ -n "$macaddr" ]; then
+                printf '%-15s @ %s\n' "$ipaddr" "$macaddr";
+            else
+                printf '%15s\r' "";
+            fi;
+        done;
+
+        [ $# -gt 0 ] && break;
+        read l;
     done;
 
     return 0; # success
